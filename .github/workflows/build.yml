@@ -20,16 +20,14 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.22.x' # Daha güncel ve kararlı bir sürüme çekildi
+          flutter-version: '3.22.x'
           channel: 'stable'
 
       - name: Repair Android Project & Rebuild
         run: |
-          # Mevcut bozuk android klasörünü temizliyoruz
           rm -rf android
-          # Güncel Flutter şablonuyla android altyapısını sıfırdan temiz bir şekilde üretiyoruz
-          flutter create . --platforms=android
-          # Bağımlılıkları çekip derlemeyi başlatıyoruz
+          # --project-name=language_app diyerek o geçersiz isim kuralını bypass ediyoruz
+          flutter create . --platforms=android --project-name=language_app
           flutter pub get
           flutter build apk --release
 
