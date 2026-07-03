@@ -14,8 +14,9 @@ class SyncService {
   
   // Callback to notify the application when a sync completes
   void Function()? onSyncComplete;
+  void Function(String message)? onError;
 
-  SyncService({this.onSyncComplete});
+  SyncService({this.onSyncComplete, this.onError});
 
   /// Starts listening to connectivity changes.
   void startListening() {
@@ -70,8 +71,10 @@ class SyncService {
       if (hasChanges && onSyncComplete != null) {
         onSyncComplete!();
       }
-    } catch (_) {
-      // Catch silently to maintain robust offline-first functionality
+    } catch (e) {
+      if (onError != null) {
+        onError!('Phonetics sync failed: $e');
+      }
     } finally {
       _isSyncing = false;
     }

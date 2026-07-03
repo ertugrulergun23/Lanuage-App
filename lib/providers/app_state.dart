@@ -19,6 +19,7 @@ class AppState extends ChangeNotifier {
   List<Word> _words = [];
   List<Topic> _topics = [];
   List<Word> _flashcardWords = []; // Independent list for flashcard practices
+  List<String> _errorLogs = []; // Global system error logs
 
   // Theme State
   bool _isDarkMode = false;
@@ -44,6 +45,7 @@ class AppState extends ChangeNotifier {
   List<Word> get words => _words;
   List<Topic> get topics => _topics;
   List<Word> get flashcardWords => _flashcardWords;
+  List<String> get errorLogs => _errorLogs;
   bool get isDarkMode => _isDarkMode;
   bool get isOnline => _isOnline && !_isMockOffline;
   bool get isMockOffline => _isMockOffline;
@@ -60,26 +62,47 @@ class AppState extends ChangeNotifier {
   bool get isLoadingTopics => _isLoadingTopics;
 
   AppState() {
-    _syncService = SyncService(onSyncComplete: _onSyncComplete);
+    _syncService = SyncService(
+      onSyncComplete: _onSyncComplete,
+      onError: (err) => logError(err),
+    );
     _init();
   }
 
+  // --- Monospace Logger Core API ---
+
+  void logError(String message) {
+    final now = DateTime.now();
+    final timeString = "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}";
+    _errorLogs.add("[$timeString] $message");
+    notifyListeners();
+  }
+
+  void clearLogs() {
+    _errorLogs.clear();
+    notifyListeners();
+  }
+
   Future<void> _init() async {
-    // 1. Check current connection
-    final connectivityResults = await Connectivity().checkConnectivity();
-    _isOnline = connectivityResults.isNotEmpty && 
-                connectivityResults.any((result) => result != ConnectivityResult.none);
-    
-    // Start listening to real network changes
-    _syncService.startListening();
+    try {
+      // 1. Check current connection
+      final connectivityResults = await Connectivity().checkConnectivity();
+      _isOnline = connectivityResults.isNotEmpty && 
+                  connectivityResults.any((result) => result != ConnectivityResult.none);
+      
+      // Start listening to real network changes
+      _syncService.startListening();
 
-    // 2. Load database records
-    await loadWords();
-    await _loadOrSeedTopics();
+      // 2. Load database records
+      await loadWords();
+      await _loadOrSeedTopics();
 
-    // 3. Perform initial sync of pending words if online
-    if (isOnline) {
-      await _syncPendingWords();
+      // 3. Perform initial sync of pending words if online
+      if (isOnline) {
+        await _syncPendingWords();
+      }
+    } catch (e) {
+      logError("App initialization failed: $e");
     }
   }
 
@@ -119,9 +142,13 @@ class AppState extends ChangeNotifier {
   // --- Vocabulary / Words Operations ---
 
   Future<void> loadWords() async {
-    _words = await _db.getWords();
-    _flashcardWords = List<Word>.from(_words);
-    notifyListeners();
+    try {
+      _words = await _db.getWords();
+      _flashcardWords = List<Word>.from(_words);
+      notifyListeners();
+    } catch (e) {
+      logError("Database loadWords failed: $e");
+    }
   }
 
   Future<void> addWordManually(String english, String turkish) async {
@@ -130,40 +157,56 @@ class AppState extends ChangeNotifier {
     final wordEnglish = english.trim();
     final wordTurkish = turkish.trim();
 
-    if (isOnline) {
-      // Fetch phonetic online
-      final phonetic = await _api.fetchPhonetic(wordEnglish);
-      final word = Word(
-        english: wordEnglish,
-        turkish: wordTurkish,
-        phonetic: phonetic,
-        syncStatus: 'synced',
-      );
-      await _db.insertWord(word);
-    } else {
-      // Offline mode: save blank phonetic with 'pending' status
-      final word = Word(
-        english: wordEnglish,
-        turkish: wordTurkish,
-        phonetic: '',
-        syncStatus: 'pending',
-      );
-      await _db.insertWord(word);
+    try {
+      if (isOnline) {
+        // Fetch phonetic online
+        String phonetic = '';
+        try {
+          phonetic = await _api.fetchPhonetic(wordEnglish);
+        } catch (e) {
+          logError("Phonetics API fetch failed for '$wordEnglish': $e");
+        }
+        final word = Word(
+          english: wordEnglish,
+          turkish: wordTurkish,
+          phonetic: phonetic,
+          syncStatus: 'synced',
+        );
+        await _db.insertWord(word);
+      } else {
+        // Offline mode: save blank phonetic with 'pending' status
+        final word = Word(
+          english: wordEnglish,
+          turkish: wordTurkish,
+          phonetic: '',
+          syncStatus: 'pending',
+        );
+        await _db.insertWord(word);
+      }
+      await loadWords();
+    } catch (e) {
+      logError("Database addWord failed for '$wordEnglish': $e");
     }
-
-    await loadWords();
   }
 
   Future<void> updateWord(Word word) async {
-    await _db.updateWord(word);
-    await loadWords();
+    try {
+      await _db.updateWord(word);
+      await loadWords();
+    } catch (e) {
+      logError("Database updateWord failed for '${word.english}': $e");
+    }
   }
 
   Future<void> deleteWord(int id) async {
-    await _db.deleteWord(id);
-    // If deleted word was selected in writing, remove it from that selection
-    _selectedWritingWords.removeWhere((w) => w.id == id);
-    await loadWords();
+    try {
+      await _db.deleteWord(id);
+      // If deleted word was selected in writing, remove it from that selection
+      _selectedWritingWords.removeWhere((w) => w.id == id);
+      await loadWords();
+    } catch (e) {
+      logError("Database deleteWord failed for ID $id: $e");
+    }
   }
 
   // --- Translation Operations ---
@@ -190,8 +233,13 @@ class AppState extends ChangeNotifier {
     _isTranslating = true;
     notifyListeners();
 
-    final result = await _api.translate(_translateInput, isEnglishToTurkish: _isEnglishToTurkish);
-    _translateOutput = result;
+    try {
+      final result = await _api.translate(_translateInput, isEnglishToTurkish: _isEnglishToTurkish);
+      _translateOutput = result;
+    } catch (e) {
+      logError("Translation failed for '${_translateInput}': $e");
+      _translateOutput = '';
+    }
 
     _isTranslating = false;
     notifyListeners();
@@ -219,7 +267,8 @@ class AppState extends ChangeNotifier {
     if (_words.isEmpty) return null;
     try {
       return await _pdf.generateVocabularyPdf(_words, directoryPath);
-    } catch (_) {
+    } catch (e) {
+      logError("PDF Generation failed: $e");
       return null;
     }
   }
@@ -241,20 +290,24 @@ class AppState extends ChangeNotifier {
   // --- Writing Module Operations (Delta-Update Logic) ---
 
   Future<void> _loadOrSeedTopics() async {
-    _topics = await _db.getTopics();
-    if (_topics.isEmpty) {
-      // Seed initial topics locally to start offline
-      final initialTopics = [
-        Topic(id: 'tech_intro', name: 'Introduce how technology affects your daily life', category: 'Technology'),
-        Topic(id: 'cooking', name: 'Describe your favorite recipe and how to prepare it', category: 'Food'),
-        Topic(id: 'travel_story', name: 'Write about a memorable holiday destination', category: 'Travel'),
-        Topic(id: 'hobbies_detail', name: 'How do you spend your free time and why is it beneficial?', category: 'Personal'),
-        Topic(id: 'sports_health', name: 'Explain the importance of regular exercise', category: 'Health'),
-      ];
-      await _db.replaceTopics(initialTopics);
-      _topics = initialTopics;
+    try {
+      _topics = await _db.getTopics();
+      if (_topics.isEmpty) {
+        // Seed initial topics locally to start offline
+        final initialTopics = [
+          Topic(id: 'tech_intro', name: 'Introduce how technology affects your daily life', category: 'Technology'),
+          Topic(id: 'cooking', name: 'Describe your favorite recipe and how to prepare it', category: 'Food'),
+          Topic(id: 'travel_story', name: 'Write about a memorable holiday destination', category: 'Travel'),
+          Topic(id: 'hobbies_detail', name: 'How do you spend your free time and why is it beneficial?', category: 'Personal'),
+          Topic(id: 'sports_health', name: 'Explain the importance of regular exercise', category: 'Health'),
+        ];
+        await _db.replaceTopics(initialTopics);
+        _topics = initialTopics;
+      }
+      notifyListeners();
+    } catch (e) {
+      logError("Database load/seed topics failed: $e");
     }
-    notifyListeners();
   }
 
   /// Sets word count N directly or via increment/decrement
@@ -271,17 +324,21 @@ class AppState extends ChangeNotifier {
     _isLoadingTopics = true;
     notifyListeners();
 
-    final freshTopics = await _api.fetchOnlineTopics();
-    if (freshTopics.isNotEmpty) {
-      // Overwrite a portion: keep 3 random current topics, replace the rest
-      final currentTopicsCopy = List<Topic>.from(_topics)..shuffle();
-      final keptTopics = currentTopicsCopy.take(min(3, currentTopicsCopy.length)).toList();
-      
-      final combined = [...keptTopics, ...freshTopics];
-      
-      // Update DB and Memory state
-      await _db.replaceTopics(combined);
-      _topics = combined;
+    try {
+      final freshTopics = await _api.fetchOnlineTopics();
+      if (freshTopics.isNotEmpty) {
+        // Overwrite a portion: keep 3 random current topics, replace the rest
+        final currentTopicsCopy = List<Topic>.from(_topics)..shuffle();
+        final keptTopics = currentTopicsCopy.take(min(3, currentTopicsCopy.length)).toList();
+        
+        final combined = [...keptTopics, ...freshTopics];
+        
+        // Update DB and Memory state
+        await _db.replaceTopics(combined);
+        _topics = combined;
+      }
+    } catch (e) {
+      logError("Topics online fetch failed: $e");
     }
 
     _isLoadingTopics = false;

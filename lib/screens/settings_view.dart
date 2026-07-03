@@ -159,6 +159,101 @@ class SettingsView extends StatelessWidget {
                 ),
               ),
 
+              const SizedBox(height: 20),
+
+              // System Logs Card
+              Card(
+                elevation: isDark ? 1 : 2,
+                shadowColor: Colors.black12,
+                color: isDark ? Colors.grey[900] : Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(
+                    color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+                    width: 0.8,
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'SİSTEM GÜNLÜĞÜ / HATA LOGLARI',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.indigo[200] : Colors.indigo[700],
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                          if (state.errorLogs.isNotEmpty)
+                            TextButton.icon(
+                              onPressed: () => state.clearLogs(),
+                              icon: const Icon(Icons.delete_sweep_rounded, size: 18, color: Colors.redAccent),
+                              label: const Text(
+                                'Temizle',
+                                style: TextStyle(fontSize: 12, color: Colors.redAccent, fontWeight: FontWeight.bold),
+                              ),
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: Size.zero,
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      Container(
+                        width: double.infinity,
+                        height: 160,
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.black26 : Colors.grey[100],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isDark ? Colors.grey[800]! : Colors.grey[300]!,
+                            width: 0.5,
+                          ),
+                        ),
+                        child: state.errorLogs.isEmpty
+                            ? Center(
+                                child: Text(
+                                  'Henüz bir hata günlüğü kaydedilmedi.',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: isDark ? Colors.grey[500] : Colors.grey[600],
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              )
+                            : ListView.builder(
+                                padding: const EdgeInsets.all(12),
+                                itemCount: state.errorLogs.length,
+                                itemBuilder: (context, index) {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 6.0),
+                                    child: SelectableText(
+                                      state.errorLogs[index],
+                                      style: TextStyle(
+                                        fontFamily: 'monospace',
+                                        fontSize: 11,
+                                        color: isDark ? Colors.amber[100] : const Color(0xFFC0392B),
+                                        height: 1.4,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
               const SizedBox(height: 28),
 
               // App Version & Signature

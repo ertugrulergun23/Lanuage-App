@@ -1,71 +1,58 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:translator/translator.dart';
 import '../models/topic.dart';
 
 class ApiService {
   static const String _dictionaryBaseUrl = 'https://api.dictionaryapi.dev/api/v2/entries/en';
-  static const String _translationBaseUrl = 'https://api.mymemory.translated.net/get';
+  final _translator = GoogleTranslator();
 
   /// Fetches the phonetic spelling of an English word.
-  /// Returns empty string if not found, API fails, or offline.
+  /// Throws exception on server errors.
   Future<String> fetchPhonetic(String word) async {
     if (word.isEmpty) return '';
     
-    try {
-      final cleanWord = Uri.encodeComponent(word.trim().toLowerCase());
-      final url = Uri.parse('$_dictionaryBaseUrl/$cleanWord');
-      
-      final response = await http.get(url).timeout(const Duration(seconds: 5));
-      if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        if (data.isNotEmpty) {
-          // Try to get 'phonetic' from the main body
-          final mainPhonetic = data[0]['phonetic'] as String?;
-          if (mainPhonetic != null && mainPhonetic.isNotEmpty) {
-            return mainPhonetic;
-          }
-          
-          // Otherwise, search the 'phonetics' array
-          final phonetics = data[0]['phonetics'] as List<dynamic>?;
-          if (phonetics != null && phonetics.isNotEmpty) {
-            for (var item in phonetics) {
-              final text = item['text'] as String?;
-              if (text != null && text.isNotEmpty) {
-                return text;
-              }
+    final cleanWord = Uri.encodeComponent(word.trim().toLowerCase());
+    final url = Uri.parse('$_dictionaryBaseUrl/$cleanWord');
+    
+    final response = await http.get(url).timeout(const Duration(seconds: 5));
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      if (data.isNotEmpty) {
+        // Try to get 'phonetic' from the main body
+        final mainPhonetic = data[0]['phonetic'] as String?;
+        if (mainPhonetic != null && mainPhonetic.isNotEmpty) {
+          return mainPhonetic;
+        }
+        
+        // Otherwise, search the 'phonetics' array
+        final phonetics = data[0]['phonetics'] as List<dynamic>?;
+        if (phonetics != null && phonetics.isNotEmpty) {
+          for (var item in phonetics) {
+            final text = item['text'] as String?;
+            if (text != null && text.isNotEmpty) {
+              return text;
             }
           }
         }
       }
-    } catch (_) {
-      // Quietly ignore errors and return blank per specifications
+    } else if (response.statusCode == 404) {
+      // Not found is a valid dictionary fallback
+      return '';
+    } else {
+      throw Exception('Phonetics API failed with status ${response.statusCode}');
     }
     return '';
   }
 
   /// Translates text (word or full-sentence) with dynamic direction.
-  /// Returns empty string on failure or offline.
+  /// Throws exception on connection failure.
   Future<String> translate(String text, {bool isEnglishToTurkish = true}) async {
     if (text.isEmpty) return '';
-
-    try {
-      final cleanText = Uri.encodeComponent(text.trim());
-      final langPair = isEnglishToTurkish ? 'en|tr' : 'tr|en';
-      final url = Uri.parse('$_translationBaseUrl?q=$cleanText&langpair=$langPair');
-      
-      final response = await http.get(url).timeout(const Duration(seconds: 6));
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
-        final translatedText = data['responseData']?['translatedText'] as String?;
-        if (translatedText != null && translatedText.isNotEmpty) {
-          // HTML entities clean up if any
-          return _decodeHtmlEntities(translatedText);
-        }
-      }
-    } catch (_) {
-      // Quietly ignore errors
-    }
-    return '';
+    final fromLang = isEnglishToTurkish ? 'en' : 'tr';
+    final toLang = isEnglishToTurkish ? 'tr' : 'en';
+    final translation = await _translator.translate(text, from: fromLang, to: toLang);
+    return translation.text;
   }
 
   /// Fetches a list of topics from an online source.
