@@ -471,6 +471,7 @@ class _LibraryViewState extends State<LibraryView> {
                   child: const Icon(Icons.add),
                 )
               : null,
+        );
       },
     );
   }
