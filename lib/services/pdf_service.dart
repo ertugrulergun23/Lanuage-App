@@ -26,10 +26,10 @@ class PdfService {
                 ),
               ),
               child: pw.Row(
-                main: pw.MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
                   pw.Column(
-                    cross: pw.CrossAxisAlignment.start,
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
                       pw.Text(
                         'MY VOCABULARY LIBRARY',
@@ -51,7 +51,7 @@ class PdfService {
                     ],
                   ),
                   pw.Column(
-                    cross: pw.CrossAxisAlignment.end,
+                    crossAxisAlignment: pw.CrossAxisAlignment.end,
                     children: [
                       pw.Text(
                         'Total Words: ${words.length}',
@@ -105,9 +105,6 @@ class PdfService {
                 ),
                 rowDecoration: const pw.BoxDecoration(
                   color: PdfColors.grey50,
-                ),
-                alternateRowDecoration: const pw.BoxDecoration(
-                  color: PdfColors.white,
                 ),
                 cellPadding: const pw.EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                 cellAlignment: pw.Alignment.centerLeft,

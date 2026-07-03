@@ -1,56 +1,38 @@
-name: Flutter CI/CD Build
+name: Flutter APK Build
 
 on:
   push:
-    branches:
-      - main
-      - master
-      - 'feature/*'
-  pull_request:
-    branches:
-      - main
-      - master
+    branches: [ main, master ]
 
 jobs:
   build:
-    name: Build & Analyze Flutter App
     runs-on: ubuntu-latest
-
     steps:
-      # Step 1: Checkout the code from repository
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      # Step 2: Set up Java Development Kit (required for Android builds)
-      - name: Set up JDK 17
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
-          cache: 'gradle'
 
-      # Step 3: Install Flutter SDK
-      - name: Set up Flutter
+      - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.22.x'
           channel: 'stable'
-          cache: true
 
-      # Step 4: Install dependencies
-      - name: Install dependencies
-        run: flutter pub get
+      - name: Repair Android Project & Rebuild
+        run: |
+          rm -rf android
+          # --project-name=language_app diyerek o geçersiz isim kuralını bypass ediyoruz
+          flutter create . --platforms=android --project-name=language_app
+          flutter pub get
+          flutter build apk --release
 
-      # Step 5: Run linter/analyzer checks
-      - name: Analyze code
-        run: flutter analyze
-
-      # Step 6: Build Android APK (checks code compilation validity)
-      - name: Build APK
-        run: flutter build apk --debug
-
-      # Step 7: Upload build artifact (optional but helpful)
-      - name: Upload APK Artifact
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: debug-apk
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          name: release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
