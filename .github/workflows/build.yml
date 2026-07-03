@@ -9,10 +9,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4 # v3 -> v4 yapıldı
+        uses: actions/checkout@v4
 
       - name: Setup Java
-        uses: actions/setup-java@v4 # v3 -> v4 yapıldı
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
@@ -20,17 +20,21 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.x'
+          flutter-version: '3.22.x' # Daha güncel ve kararlı bir sürüme çekildi
           channel: 'stable'
 
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Build APK
-        run: flutter build apk --release
+      - name: Repair Android Project & Rebuild
+        run: |
+          # Mevcut bozuk android klasörünü temizliyoruz
+          rm -rf android
+          # Güncel Flutter şablonuyla android altyapısını sıfırdan temiz bir şekilde üretiyoruz
+          flutter create . --platforms=android
+          # Bağımlılıkları çekip derlemeyi başlatıyoruz
+          flutter pub get
+          flutter build apk --release
 
       - name: Upload APK artifact
-        uses: actions/upload-artifact@v4 # Hata veren kısım v3 -> v4 yapıldı
+        uses: actions/upload-artifact@v4
         with:
           name: release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
