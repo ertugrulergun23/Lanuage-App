@@ -22,7 +22,7 @@ dependencies:
   # Network & Sync
   http: ^1.2.1
   connectivity_plus: ^6.0.3
-  translator: ^0.1.7
+  translator: ^1.0.4+1
   
   # Export features
   pdf: ^3.10.8
