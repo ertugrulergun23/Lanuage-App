@@ -1,0 +1,226 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/app_state.dart';
+
+class SettingsView extends StatelessWidget {
+  const SettingsView({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AppState>(
+      builder: (context, state, child) {
+        final isDark = state.isDarkMode;
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Screen Header
+              Text(
+                'Application Settings',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.indigo[200] : Colors.indigo[900],
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Customize your vocabulary learning experience.',
+                style: TextStyle(
+                  color: isDark ? Colors.grey[400] : Colors.grey[600],
+                  fontSize: 13,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Theme Configuration Card
+              Card(
+                elevation: isDark ? 1 : 2,
+                shadowColor: Colors.black12,
+                color: isDark ? Colors.grey[900] : Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(
+                    color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+                    width: 0.8,
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'APPEARANCE',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.indigo[200] : Colors.indigo[700],
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: CircleAvatar(
+                          backgroundColor: isDark 
+                              ? Colors.indigo.withOpacity(0.2) 
+                              : Colors.indigo.withOpacity(0.06),
+                          child: Icon(
+                            isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                            color: isDark ? Colors.indigo[200] : Colors.indigo[800],
+                          ),
+                        ),
+                        title: Text(
+                          'Dark Theme Mode',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                        ),
+                        subtitle: Text(
+                          'Reduces eye strain in low-light environments',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark ? Colors.grey[400] : Colors.grey[600],
+                          ),
+                        ),
+                        trailing: Switch(
+                          value: isDark,
+                          onChanged: (_) => state.toggleTheme(),
+                          activeColor: Colors.indigo[400],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Statistics Card
+              Card(
+                elevation: isDark ? 1 : 2,
+                shadowColor: Colors.black12,
+                color: isDark ? Colors.grey[900] : Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(
+                    color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+                    width: 0.8,
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'SYSTEM STATISTICS',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.indigo[200] : Colors.indigo[700],
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // Stat 1: Words
+                      _buildStatRow(
+                        icon: Icons.bookmark_added_rounded,
+                        label: 'Library Vocabulary Pairs',
+                        value: '${state.words.length}',
+                        isDark: isDark,
+                      ),
+                      const Divider(height: 24),
+
+                      // Stat 2: Topics
+                      _buildStatRow(
+                        icon: Icons.category_rounded,
+                        label: 'Cached Writing Topics',
+                        value: '${state.topics.length}',
+                        isDark: isDark,
+                      ),
+                      const Divider(height: 24),
+
+                      // Stat 3: Connection status
+                      _buildStatRow(
+                        icon: state.isOnline ? Icons.cloud_done : Icons.cloud_off,
+                        label: 'Network Synced State',
+                        value: state.isOnline ? 'Online Synced' : 'Offline Cached',
+                        isDark: isDark,
+                        valueColor: state.isOnline ? Colors.teal : Colors.orange[700],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 28),
+
+              // App Version & Signature
+              Center(
+                child: Column(
+                  children: [
+                    Text(
+                      'LingoLib v1.0.0',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                        color: isDark ? Colors.grey[600] : Colors.grey[400],
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Designed for Modern Language Acquirers',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: isDark ? Colors.grey[700] : Colors.grey[400],
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildStatRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    required bool isDark,
+    Color? valueColor,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: isDark ? Colors.grey[400] : Colors.grey[500]),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              color: isDark ? Colors.grey[300] : Colors.black87,
+            ),
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: valueColor ?? (isDark ? Colors.white : Colors.black87),
+          ),
+        ),
+      ],
+    );
+  }
+}

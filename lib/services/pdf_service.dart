@@ -7,7 +7,7 @@ import '../models/word.dart';
 class PdfService {
   /// Generates a PDF document with the list of words and saves it to the local Documents directory.
   /// Returns the saved File object.
-  Future<File> generateVocabularyPdf(List<Word> words) async {
+  Future<File> generateVocabularyPdf(List<Word> words, String directoryPath) async {
     final pdf = pw.Document();
 
     // Add content to the PDF
@@ -137,9 +137,8 @@ class PdfService {
       ),
     );
 
-    // Save the PDF file to the local directory
-    final output = await getApplicationDocumentsDirectory();
-    final file = File('${output.path}/vocabulary_library_${DateTime.now().millisecondsSinceEpoch}.pdf');
+    // Save the PDF file to the selected directory
+    final file = File('$directoryPath/vocabulary_library_${DateTime.now().millisecondsSinceEpoch}.pdf');
     await file.writeAsBytes(await pdf.save());
     return file;
   }

@@ -5,6 +5,7 @@ import 'translate_view.dart';
 import 'library_view.dart';
 import 'flashcards_view.dart';
 import 'writing_view.dart';
+import 'settings_view.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -21,6 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
     LibraryView(),
     FlashcardsView(),
     WritingView(),
+    SettingsView(),
   ];
 
   final List<String> _titles = const [
@@ -28,6 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
     'Library',
     'Flashcards',
     'Writing Prompt',
+    'Settings',
   ];
 
   @override
@@ -39,17 +42,35 @@ class _HomeScreenState extends State<HomeScreen> {
 
         return Scaffold(
           appBar: AppBar(
-            backgroundColor: Colors.white,
+            backgroundColor: state.isDarkMode ? Colors.grey[900] : Colors.white,
             elevation: 0.5,
             title: Text(
               _titles[_currentTabIndex],
-              style: const TextStyle(
-                color: Colors.black87,
+              style: TextStyle(
+                color: state.isDarkMode ? Colors.white : Colors.black87,
                 fontWeight: FontWeight.bold,
                 fontSize: 20,
               ),
             ),
             actions: [
+              // Shuffle button for Flashcards
+              if (_currentTabIndex == 2 && state.flashcardWords.isNotEmpty)
+                IconButton(
+                  icon: Icon(
+                    Icons.shuffle_rounded,
+                    color: state.isDarkMode ? Colors.indigo[200] : Colors.indigo[800],
+                  ),
+                  tooltip: 'Shuffle Flashcards',
+                  onPressed: () {
+                    state.shuffleFlashcards();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Flashcards shuffled!'),
+                        duration: Duration(milliseconds: 1000),
+                      ),
+                    );
+                  },
+                ),
               // Sync Indicator
               if (state.isSyncing)
                 const Padding(
@@ -138,7 +159,8 @@ class _HomeScreenState extends State<HomeScreen> {
               });
             },
             type: BottomNavigationBarType.fixed,
-            selectedItemColor: Colors.indigo[800],
+            backgroundColor: state.isDarkMode ? Colors.grey[900] : Colors.white,
+            selectedItemColor: state.isDarkMode ? Colors.indigo[200] : Colors.indigo[800],
             unselectedItemColor: Colors.grey[500],
             selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
             unselectedLabelStyle: const TextStyle(fontSize: 12),
@@ -163,6 +185,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: Icon(Icons.edit_note_outlined),
                 activeIcon: Icon(Icons.edit_note_rounded),
                 label: 'Writing',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.settings_outlined),
+                activeIcon: Icon(Icons.settings_rounded),
+                label: 'Settings',
               ),
             ],
           ),

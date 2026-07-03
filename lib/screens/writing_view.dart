@@ -60,6 +60,7 @@ class _WritingViewState extends State<WritingView> {
 
         final libraryEmpty = state.words.isEmpty;
         final hasPrompt = state.currentWritingTopic != null;
+        final isDark = state.isDarkMode;
 
         return SingleChildScrollView(
           padding: const EdgeInsets.all(20.0),
@@ -77,13 +78,16 @@ class _WritingViewState extends State<WritingView> {
                         'Writing Practice',
                         style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: Colors.indigo[900],
+                          color: isDark ? Colors.indigo[200] : Colors.indigo[900],
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         'Write a paragraph containing the words below.',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                        style: TextStyle(
+                          color: isDark ? Colors.grey[400] : Colors.grey[600], 
+                          fontSize: 13,
+                        ),
                       ),
                     ],
                   ),
@@ -110,8 +114,8 @@ class _WritingViewState extends State<WritingView> {
                         : const Icon(Icons.sync_rounded, size: 20),
                     tooltip: 'Refresh Online Topics',
                     style: IconButton.styleFrom(
-                      backgroundColor: Colors.indigo[50],
-                      foregroundColor: Colors.indigo[800],
+                      backgroundColor: isDark ? Colors.indigo.withOpacity(0.12) : Colors.indigo[50],
+                      foregroundColor: isDark ? Colors.indigo[200] : Colors.indigo[800],
                     ),
                   ),
                 ],
@@ -121,21 +125,28 @@ class _WritingViewState extends State<WritingView> {
               // Empty Library Fallback Warning
               if (libraryEmpty)
                 Card(
-                  color: Colors.amber[50],
+                  color: isDark ? const Color(0xFF2C2205) : Colors.amber[50],
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
-                    side: BorderSide(color: Colors.amber[250] ?? Colors.amber, width: 0.5),
+                    side: BorderSide(
+                      color: isDark ? Colors.amber.withOpacity(0.3) : (Colors.amber[250] ?? Colors.amber), 
+                      width: 0.5,
+                    ),
                   ),
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Row(
                       children: [
-                        Icon(Icons.warning_amber_rounded, color: Colors.amber[900], size: 28),
+                        Icon(Icons.warning_amber_rounded, color: Colors.amber[700], size: 28),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             'Your vocabulary library is empty. Please add words in the Translate or Library screen first to enable writing prompts!',
-                            style: TextStyle(color: Colors.amber[900], fontSize: 13, fontWeight: FontWeight.w500),
+                            style: TextStyle(
+                              color: isDark ? Colors.amber[200] : Colors.amber[900], 
+                              fontSize: 13, 
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
                       ],
@@ -147,7 +158,7 @@ class _WritingViewState extends State<WritingView> {
 
               // The Topic Display Card
               Card(
-                elevation: 3,
+                elevation: isDark ? 1 : 3,
                 shadowColor: Colors.black12,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 child: Container(
@@ -155,7 +166,9 @@ class _WritingViewState extends State<WritingView> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
                     gradient: LinearGradient(
-                      colors: [Colors.indigo[900]!, Colors.indigo[700]!],
+                      colors: isDark 
+                          ? [Colors.indigo[900]!, const Color(0xFF1E295D)]
+                          : [Colors.indigo[900]!, Colors.indigo[700]!],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -227,24 +240,36 @@ class _WritingViewState extends State<WritingView> {
               // Controls Panel
               Text(
                 'Vocabulary Config',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.indigo[900], letterSpacing: 0.5),
+                style: TextStyle(
+                  fontSize: 14, 
+                  fontWeight: FontWeight.bold, 
+                  color: isDark ? Colors.indigo[200] : Colors.indigo[900], 
+                  letterSpacing: 0.5,
+                ),
               ),
               const SizedBox(height: 10),
               Card(
                 elevation: 0,
+                color: isDark ? Colors.grey[900] : Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: Colors.grey[200]!),
+                  side: BorderSide(
+                    color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+                  ),
                 ),
                 child: Padding(
                   padding: const EdgeInsets.all(12.0),
                   child: Row(
                     children: [
-                      const Icon(Icons.filter_list_rounded, color: Colors.grey),
+                      Icon(Icons.filter_list_rounded, color: isDark ? Colors.grey[400] : Colors.grey),
                       const SizedBox(width: 8),
-                      const Text(
+                      Text(
                         'Word Count (N):',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold, 
+                          fontSize: 14,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
                       ),
                       const Spacer(),
 
@@ -252,7 +277,7 @@ class _WritingViewState extends State<WritingView> {
                       IconButton(
                         onPressed: !libraryEmpty ? () => _decrement(state) : null,
                         icon: const Icon(Icons.remove),
-                        color: Colors.indigo,
+                        color: isDark ? Colors.indigo[300] : Colors.indigo,
                       ),
 
                       // Direct Input Field
@@ -264,14 +289,23 @@ class _WritingViewState extends State<WritingView> {
                           keyboardType: TextInputType.number,
                           textAlign: TextAlign.center,
                           enabled: !libraryEmpty,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold, 
+                            fontSize: 15,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
                           inputFormatters: [
                             FilteringTextInputFormatter.digitsOnly,
                             LengthLimitingTextInputFormatter(2),
                           ],
                           decoration: InputDecoration(
                             contentPadding: EdgeInsets.zero,
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(
+                                color: isDark ? Colors.grey[750] ?? Colors.grey[700]! : Colors.grey[300]!,
+                              ),
+                            ),
                           ),
                           onChanged: (val) => _onCountChanged(val, state),
                         ),
@@ -281,7 +315,7 @@ class _WritingViewState extends State<WritingView> {
                       IconButton(
                         onPressed: !libraryEmpty ? () => _increment(state) : null,
                         icon: const Icon(Icons.add),
-                        color: Colors.indigo,
+                        color: isDark ? Colors.indigo[300] : Colors.indigo,
                       ),
                     ],
                   ),
@@ -297,12 +331,21 @@ class _WritingViewState extends State<WritingView> {
                   children: [
                     Text(
                       'INCORPORATE THESE WORDS (${state.selectedWritingWords.length}):',
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.indigo[700], letterSpacing: 1.0),
+                      style: TextStyle(
+                        fontSize: 11, 
+                        fontWeight: FontWeight.bold, 
+                        color: isDark ? Colors.indigo[200] : Colors.indigo[700], 
+                        letterSpacing: 1.0,
+                      ),
                     ),
                     if (state.selectedWritingWords.length < state.writingWordCount && !libraryEmpty)
                       Text(
                         'Library cap reached',
-                        style: TextStyle(fontSize: 10, color: Colors.grey[500], fontStyle: FontStyle.italic),
+                        style: TextStyle(
+                          fontSize: 10, 
+                          color: isDark ? Colors.grey[500] : Colors.grey[500], 
+                          fontStyle: FontStyle.italic,
+                        ),
                       ),
                   ],
                 ),
@@ -312,7 +355,7 @@ class _WritingViewState extends State<WritingView> {
                     width: double.infinity,
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.grey[100],
+                      color: isDark ? Colors.grey[900] : Colors.grey[100],
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Center(
@@ -330,7 +373,11 @@ class _WritingViewState extends State<WritingView> {
                       return Chip(
                         label: RichText(
                           text: TextSpan(
-                            style: const TextStyle(color: Colors.black87, fontSize: 13, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              color: isDark ? Colors.white : Colors.black87, 
+                              fontSize: 13, 
+                              fontWeight: FontWeight.bold,
+                            ),
                             children: [
                               TextSpan(text: word.english),
                               if (word.phonetic.isNotEmpty) ...[
@@ -340,7 +387,7 @@ class _WritingViewState extends State<WritingView> {
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.normal,
-                                    color: Colors.indigo[700],
+                                    color: isDark ? Colors.indigo[200] : Colors.indigo[700],
                                     fontStyle: FontStyle.italic,
                                   ),
                                 ),
@@ -348,8 +395,10 @@ class _WritingViewState extends State<WritingView> {
                             ],
                           ),
                         ),
-                        backgroundColor: Colors.indigo.withOpacity(0.06),
-                        side: BorderSide(color: Colors.indigo.withOpacity(0.15)),
+                        backgroundColor: Colors.indigo.withOpacity(isDark ? 0.12 : 0.06),
+                        side: BorderSide(
+                          color: Colors.indigo.withOpacity(isDark ? 0.3 : 0.15),
+                        ),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                       );
                     }).toList(),
@@ -367,7 +416,7 @@ class _WritingViewState extends State<WritingView> {
                           ? () => state.generateNewWritingPrompt()
                           : null,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.indigo[800],
+                        backgroundColor: isDark ? Colors.indigo[600] : Colors.indigo[800],
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         padding: const EdgeInsets.symmetric(vertical: 14),
@@ -388,8 +437,11 @@ class _WritingViewState extends State<WritingView> {
                           ? () => state.updateWritingWordsOnly()
                           : null,
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.indigo[800],
-                        side: BorderSide(color: Colors.indigo[800]!, width: 1.5),
+                        foregroundColor: isDark ? Colors.indigo[200] : Colors.indigo[800],
+                        side: BorderSide(
+                          color: isDark ? Colors.indigo[200]! : Colors.indigo[800]!, 
+                          width: 1.5,
+                        ),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),

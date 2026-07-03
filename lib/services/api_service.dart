@@ -43,14 +43,15 @@ class ApiService {
     return '';
   }
 
-  /// Translates text (word or full-sentence) from English to Turkish.
+  /// Translates text (word or full-sentence) with dynamic direction.
   /// Returns empty string on failure or offline.
-  Future<String> translate(String text) async {
+  Future<String> translate(String text, {bool isEnglishToTurkish = true}) async {
     if (text.isEmpty) return '';
 
     try {
       final cleanText = Uri.encodeComponent(text.trim());
-      final url = Uri.parse('$_translationBaseUrl?q=$cleanText&langpair=en|tr');
+      final langPair = isEnglishToTurkish ? 'en|tr' : 'tr|en';
+      final url = Uri.parse('$_translationBaseUrl?q=$cleanText&langpair=$langPair');
       
       final response = await http.get(url).timeout(const Duration(seconds: 6));
       if (response.statusCode == 200) {

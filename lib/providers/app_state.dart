@@ -18,6 +18,10 @@ class AppState extends ChangeNotifier {
   // State lists
   List<Word> _words = [];
   List<Topic> _topics = [];
+  List<Word> _flashcardWords = []; // Independent list for flashcard practices
+
+  // Theme State
+  bool _isDarkMode = false;
 
   // Network State
   bool _isOnline = true;
@@ -28,6 +32,7 @@ class AppState extends ChangeNotifier {
   String _translateInput = '';
   String _translateOutput = '';
   bool _isTranslating = false;
+  bool _isEnglishToTurkish = true; // Translation direction flag
 
   // Writing Module State
   Topic? _currentWritingTopic;
@@ -38,6 +43,8 @@ class AppState extends ChangeNotifier {
   // Getters
   List<Word> get words => _words;
   List<Topic> get topics => _topics;
+  List<Word> get flashcardWords => _flashcardWords;
+  bool get isDarkMode => _isDarkMode;
   bool get isOnline => _isOnline && !_isMockOffline;
   bool get isMockOffline => _isMockOffline;
   bool get isSyncing => _isSyncing;
@@ -45,6 +52,7 @@ class AppState extends ChangeNotifier {
   String get translateInput => _translateInput;
   String get translateOutput => _translateOutput;
   bool get isTranslating => _isTranslating;
+  bool get isEnglishToTurkish => _isEnglishToTurkish;
 
   Topic? get currentWritingTopic => _currentWritingTopic;
   int get writingWordCount => _writingWordCount;
@@ -112,6 +120,7 @@ class AppState extends ChangeNotifier {
 
   Future<void> loadWords() async {
     _words = await _db.getWords();
+    _flashcardWords = List<Word>.from(_words);
     notifyListeners();
   }
 
@@ -167,13 +176,21 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void toggleTranslationDirection() {
+    _isEnglishToTurkish = !_isEnglishToTurkish;
+    final temp = _translateInput;
+    _translateInput = _translateOutput;
+    _translateOutput = temp;
+    notifyListeners();
+  }
+
   Future<void> translate() async {
     if (!isOnline || _translateInput.trim().isEmpty) return;
 
     _isTranslating = true;
     notifyListeners();
 
-    final result = await _api.translate(_translateInput);
+    final result = await _api.translate(_translateInput, isEnglishToTurkish: _isEnglishToTurkish);
     _translateOutput = result;
 
     _isTranslating = false;
@@ -183,8 +200,9 @@ class AppState extends ChangeNotifier {
   Future<void> addTranslationToLibrary() async {
     if (_translateInput.isEmpty || _translateOutput.isEmpty) return;
 
-    final english = _translateInput;
-    final turkish = _translateOutput;
+    // Map correctly: English to the english column, Turkish to the turkish column
+    final english = _isEnglishToTurkish ? _translateInput : _translateOutput;
+    final turkish = _isEnglishToTurkish ? _translateOutput : _translateInput;
 
     // Reset input fields
     _translateInput = '';
@@ -197,13 +215,27 @@ class AppState extends ChangeNotifier {
 
   // --- PDF Export Operation ---
 
-  Future<File?> exportLibraryToPdf() async {
+  Future<File?> exportLibraryToPdf(String directoryPath) async {
     if (_words.isEmpty) return null;
     try {
-      return await _pdf.generateVocabularyPdf(_words);
+      return await _pdf.generateVocabularyPdf(_words, directoryPath);
     } catch (_) {
       return null;
     }
+  }
+
+  // --- Theme Toggle Operation ---
+
+  void toggleTheme() {
+    _isDarkMode = !_isDarkMode;
+    notifyListeners();
+  }
+
+  // --- Flashcard Shuffling ---
+
+  void shuffleFlashcards() {
+    _flashcardWords.shuffle();
+    notifyListeners();
   }
 
   // --- Writing Module Operations (Delta-Update Logic) ---

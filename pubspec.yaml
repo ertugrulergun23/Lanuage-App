@@ -25,6 +25,7 @@ dependencies:
   
   # Export features
   pdf: ^3.10.8
+  file_picker: ^8.0.3
 
 dev_dependencies:
   flutter_test:

@@ -34,7 +34,8 @@ class _FlashcardsViewState extends State<FlashcardsView> {
   Widget build(BuildContext context) {
     return Consumer<AppState>(
       builder: (context, state, child) {
-        final cards = state.words;
+        final cards = state.flashcardWords;
+        final isDark = state.isDarkMode;
 
         if (cards.isEmpty) {
           return Center(
@@ -43,21 +44,28 @@ class _FlashcardsViewState extends State<FlashcardsView> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.style_outlined, size: 64, color: Colors.grey[300]),
+                  Icon(
+                    Icons.style_outlined, 
+                    size: 64, 
+                    color: isDark ? Colors.grey[800] : Colors.grey[300],
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'No Flashcards Available',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Colors.indigo[900],
+                      color: isDark ? Colors.indigo[200] : Colors.indigo[900],
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
+                  Text(
                     'Add words or phrases to your library, and they will automatically populate as practice flashcards here.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey, fontSize: 14),
+                    style: TextStyle(
+                      color: isDark ? Colors.grey[400] : Colors.grey, 
+                      fontSize: 14,
+                    ),
                   ),
                 ],
               ),
@@ -86,13 +94,16 @@ class _FlashcardsViewState extends State<FlashcardsView> {
                     'Practice Flashcards',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: Colors.indigo[900],
+                      color: isDark ? Colors.indigo[200] : Colors.indigo[900],
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Tap the card to flip and reveal the translation',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                    style: TextStyle(
+                      color: isDark ? Colors.grey[400] : Colors.grey[600], 
+                      fontSize: 13,
+                    ),
                   ),
                 ],
               ),
@@ -105,7 +116,7 @@ class _FlashcardsViewState extends State<FlashcardsView> {
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1.5,
-                  color: Colors.indigo[400],
+                  color: isDark ? Colors.indigo[200] : Colors.indigo[400],
                 ),
               ),
               const SizedBox(height: 16),
@@ -154,22 +165,27 @@ class _FlashcardsViewState extends State<FlashcardsView> {
                     icon: const Icon(Icons.arrow_back_rounded),
                     style: IconButton.styleFrom(
                       padding: const EdgeInsets.all(16),
-                      disabledBackgroundColor: Colors.grey[100],
-                      disabledForegroundColor: Colors.grey[400],
+                      backgroundColor: isDark ? Colors.grey[850] : null,
+                      disabledBackgroundColor: isDark ? Colors.grey[900] : Colors.grey[100],
+                      disabledForegroundColor: Colors.grey[600],
                     ),
                   ),
                   
                   // Quick Hint text
                   Row(
                     children: [
-                      Icon(Icons.flip_camera_android_rounded, size: 16, color: Colors.grey[400]),
+                      Icon(
+                        Icons.flip_camera_android_rounded, 
+                        size: 16, 
+                        color: isDark ? Colors.grey[500] : Colors.grey[400],
+                      ),
                       const SizedBox(width: 6),
                       Text(
                         'Tap to Flip',
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
-                          color: Colors.grey[500],
+                          color: isDark ? Colors.grey[400] : Colors.grey[500],
                         ),
                       ),
                     ],
@@ -183,8 +199,9 @@ class _FlashcardsViewState extends State<FlashcardsView> {
                     icon: const Icon(Icons.arrow_forward_rounded),
                     style: IconButton.styleFrom(
                       padding: const EdgeInsets.all(16),
-                      disabledBackgroundColor: Colors.grey[100],
-                      disabledForegroundColor: Colors.grey[400],
+                      backgroundColor: isDark ? Colors.grey[850] : null,
+                      disabledBackgroundColor: isDark ? Colors.grey[900] : Colors.grey[100],
+                      disabledForegroundColor: Colors.grey[600],
                     ),
                   ),
                 ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:file_picker/file_picker.dart';
 import '../providers/app_state.dart';
 import '../models/word.dart';
 
@@ -15,6 +16,7 @@ class _LibraryViewState extends State<LibraryView> {
 
   void _showAddEditWordDialog(BuildContext context, {Word? existingWord}) {
     final state = Provider.of<AppState>(context, listen: false);
+    final isDark = state.isDarkMode;
     final englishController = TextEditingController(text: existingWord?.english ?? '');
     final turkishController = TextEditingController(text: existingWord?.turkish ?? '');
 
@@ -22,10 +24,14 @@ class _LibraryViewState extends State<LibraryView> {
       context: context,
       builder: (context) {
         return AlertDialog(
+          backgroundColor: isDark ? Colors.grey[900] : Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Text(
             existingWord == null ? 'Add New Vocabulary' : 'Edit Vocabulary',
-            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.indigo),
+            style: TextStyle(
+              fontWeight: FontWeight.bold, 
+              color: isDark ? Colors.indigo[200] : Colors.indigo[800],
+            ),
           ),
           content: SingleChildScrollView(
             child: Column(
@@ -33,16 +39,20 @@ class _LibraryViewState extends State<LibraryView> {
               children: [
                 TextField(
                   controller: englishController,
+                  style: TextStyle(color: isDark ? Colors.white : Colors.black87),
                   decoration: InputDecoration(
                     labelText: 'English Word / Sentence',
+                    labelStyle: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600]),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                   ),
                 ),
                 const SizedBox(height: 16),
                 TextField(
                   controller: turkishController,
+                  style: TextStyle(color: isDark ? Colors.white : Colors.black87),
                   decoration: InputDecoration(
                     labelText: 'Turkish Translation',
+                    labelStyle: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey[600]),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                   ),
                 ),
@@ -52,7 +62,7 @@ class _LibraryViewState extends State<LibraryView> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+              child: Text('Cancel', style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey)),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -88,7 +98,7 @@ class _LibraryViewState extends State<LibraryView> {
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.indigo,
+                backgroundColor: isDark ? Colors.indigo[600] : Colors.indigo,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
@@ -111,6 +121,15 @@ class _LibraryViewState extends State<LibraryView> {
       return;
     }
 
+    // Let the user choose the saving directory dynamically
+    final selectedDirectory = await FilePicker.platform.getDirectoryPath();
+    if (selectedDirectory == null) {
+      // User cancelled picker
+      return;
+    }
+
+    if (!context.mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Row(
@@ -127,7 +146,7 @@ class _LibraryViewState extends State<LibraryView> {
       ),
     );
 
-    final file = await state.exportLibraryToPdf();
+    final file = await state.exportLibraryToPdf(selectedDirectory);
 
     if (context.mounted) {
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -135,18 +154,28 @@ class _LibraryViewState extends State<LibraryView> {
         showDialog(
           context: context,
           builder: (context) => AlertDialog(
+            backgroundColor: state.isDarkMode ? Colors.grey[900] : Colors.white,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             icon: const Icon(Icons.picture_as_pdf, color: Colors.redAccent, size: 40),
-            title: const Text('PDF Exported Successfully'),
+            title: Text(
+              'PDF Exported Successfully',
+              style: TextStyle(color: state.isDarkMode ? Colors.white : Colors.black87),
+            ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('All vocabulary pairs have been exported to a professional PDF file.'),
+                Text(
+                  'All vocabulary pairs have been exported to a professional PDF file.',
+                  style: TextStyle(color: state.isDarkMode ? Colors.grey[300] : Colors.black87),
+                ),
                 const SizedBox(height: 12),
                 Text(
                   'Saved location:',
-                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[700]),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold, 
+                    color: state.isDarkMode ? Colors.indigo[200] : Colors.grey[700],
+                  ),
                 ),
                 const SizedBox(height: 4),
                 SelectableText(
@@ -154,7 +183,7 @@ class _LibraryViewState extends State<LibraryView> {
                   style: TextStyle(
                     fontSize: 12,
                     fontFamily: 'monospace',
-                    color: Colors.indigo[800],
+                    color: state.isDarkMode ? Colors.indigo[200] : Colors.indigo[800],
                   ),
                 ),
               ],
@@ -182,6 +211,8 @@ class _LibraryViewState extends State<LibraryView> {
   Widget build(BuildContext context) {
     return Consumer<AppState>(
       builder: (context, state, child) {
+        final isDark = state.isDarkMode;
+        
         // Filter words based on search query
         final filteredWords = state.words.where((word) {
           final query = _searchQuery.toLowerCase();
@@ -190,6 +221,7 @@ class _LibraryViewState extends State<LibraryView> {
         }).toList();
 
         return Scaffold(
+          backgroundColor: isDark ? const Color(0xFF121212) : Colors.grey[50],
           body: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -205,12 +237,15 @@ class _LibraryViewState extends State<LibraryView> {
                             'Vocabulary Library',
                             style: Theme.of(context).textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
-                              color: Colors.indigo[900],
+                              color: isDark ? Colors.indigo[200] : Colors.indigo[900],
                             ),
                           ),
                           Text(
                             '${state.words.length} entries saved',
-                            style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                            style: TextStyle(
+                              color: isDark ? Colors.grey[400] : Colors.grey[600], 
+                              fontSize: 13,
+                            ),
                           ),
                         ],
                       ),
@@ -220,12 +255,14 @@ class _LibraryViewState extends State<LibraryView> {
                       icon: const Icon(Icons.download_rounded, size: 18),
                       label: const Text('Export PDF'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.indigo[50],
-                        foregroundColor: Colors.indigo[900],
+                        backgroundColor: isDark ? Colors.indigo.withOpacity(0.12) : Colors.indigo[50],
+                        foregroundColor: isDark ? Colors.indigo[200] : Colors.indigo[900],
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
-                          side: BorderSide(color: Colors.indigo[100]!),
+                          side: BorderSide(
+                            color: isDark ? Colors.indigo.withOpacity(0.3) : Colors.indigo[100]!,
+                          ),
                         ),
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                       ),
@@ -241,19 +278,29 @@ class _LibraryViewState extends State<LibraryView> {
                       _searchQuery = val;
                     });
                   },
+                  style: TextStyle(color: isDark ? Colors.white : Colors.black87),
                   decoration: InputDecoration(
                     hintText: 'Search words...',
+                    hintStyle: TextStyle(color: Colors.grey[400]),
                     prefixIcon: const Icon(Icons.search, size: 20),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
+                      borderSide: BorderSide(
+                        color: isDark ? Colors.grey[800]! : Colors.grey[300]!,
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: isDark ? Colors.grey[800]! : Colors.grey[300]!,
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: const BorderSide(color: Colors.indigo),
                     ),
                     contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                    fillColor: Colors.grey[50],
+                    fillColor: isDark ? Colors.grey[900] : Colors.grey[50],
                     filled: true,
                   ),
                 ),
@@ -266,13 +313,20 @@ class _LibraryViewState extends State<LibraryView> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.import_contacts, size: 48, color: Colors.grey[300]),
+                              Icon(
+                                Icons.import_contacts, 
+                                size: 48, 
+                                color: isDark ? Colors.grey[800] : Colors.grey[300],
+                              ),
                               const SizedBox(height: 12),
                               Text(
                                 _searchQuery.isEmpty
                                     ? 'Your vocabulary library is empty'
                                     : 'No matching words found',
-                                style: TextStyle(color: Colors.grey[500], fontSize: 15),
+                                style: TextStyle(
+                                  color: isDark ? Colors.grey[500] : Colors.grey[500], 
+                                  fontSize: 15,
+                                ),
                               ),
                               if (_searchQuery.isEmpty) ...[
                                 const SizedBox(height: 16),
@@ -281,7 +335,7 @@ class _LibraryViewState extends State<LibraryView> {
                                   icon: const Icon(Icons.add),
                                   label: const Text('Add Word'),
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.indigo,
+                                    backgroundColor: isDark ? Colors.indigo[600] : Colors.indigo,
                                     foregroundColor: Colors.white,
                                   ),
                                 ),
@@ -297,22 +351,26 @@ class _LibraryViewState extends State<LibraryView> {
 
                             return Card(
                               margin: const EdgeInsets.only(bottom: 10),
+                              color: isDark ? Colors.grey[900] : Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
-                                side: BorderSide(color: Colors.grey[150] ?? Colors.grey[200]!, width: 0.8),
+                                side: BorderSide(
+                                  color: isDark ? Colors.grey[800]! : (Colors.grey[150] ?? Colors.grey[200]!), 
+                                  width: 0.8,
+                                ),
                               ),
                               elevation: 0.5,
                               child: ListTile(
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                                 title: Row(
                                   children: [
                                     Expanded(
                                       child: RichText(
                                         text: TextSpan(
-                                          style: const TextStyle(
-                                            fontSize: 16,
+                                          style: TextStyle(
+                                            fontSize: 15,
                                             fontWeight: FontWeight.w600,
-                                            color: Colors.black87,
+                                            color: isDark ? Colors.white : Colors.black87,
                                           ),
                                           children: [
                                             TextSpan(text: word.english),
@@ -323,11 +381,19 @@ class _LibraryViewState extends State<LibraryView> {
                                                 style: TextStyle(
                                                   fontSize: 13,
                                                   fontWeight: FontWeight.normal,
-                                                  color: Colors.indigo[600],
+                                                  color: isDark ? Colors.indigo[200] : Colors.indigo[600],
                                                   fontStyle: FontStyle.italic,
                                                 ),
                                               ),
                                             ],
+                                            const TextSpan(text: ' = '),
+                                            TextSpan(
+                                              text: word.turkish,
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w500,
+                                                color: isDark ? Colors.grey[300] : Colors.grey[800],
+                                              ),
+                                            ),
                                           ],
                                         ),
                                       ),
@@ -336,9 +402,12 @@ class _LibraryViewState extends State<LibraryView> {
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                                         decoration: BoxDecoration(
-                                          color: Colors.orange[50],
+                                          color: isDark ? Colors.orange.withOpacity(0.12) : Colors.orange[50],
                                           borderRadius: BorderRadius.circular(6),
-                                          border: Border.all(color: Colors.orange[200]!, width: 0.5),
+                                          border: Border.all(
+                                            color: isDark ? Colors.orange.withOpacity(0.3) : Colors.orange[200]!, 
+                                            width: 0.5,
+                                          ),
                                         ),
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
@@ -365,22 +434,15 @@ class _LibraryViewState extends State<LibraryView> {
                                       ),
                                   ],
                                 ),
-                                subtitle: Padding(
-                                  padding: const EdgeInsets.only(top: 4.0),
-                                  child: Text(
-                                    word.turkish,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.grey[700],
-                                    ),
-                                  ),
-                                ),
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     IconButton(
-                                      icon: const Icon(Icons.edit_outlined, size: 20, color: Colors.blueGrey),
+                                      icon: Icon(
+                                        Icons.edit_outlined, 
+                                        size: 20, 
+                                        color: isDark ? Colors.grey[400] : Colors.blueGrey,
+                                      ),
                                       onPressed: () => _showAddEditWordDialog(context, existingWord: word),
                                       constraints: const BoxConstraints(),
                                       padding: const EdgeInsets.all(8),
@@ -404,12 +466,11 @@ class _LibraryViewState extends State<LibraryView> {
           floatingActionButton: state.words.isNotEmpty
               ? FloatingActionButton(
                   onPressed: () => _showAddEditWordDialog(context),
-                  backgroundColor: Colors.indigo,
+                  backgroundColor: isDark ? Colors.indigo[600] : Colors.indigo,
                   foregroundColor: Colors.white,
                   child: const Icon(Icons.add),
                 )
               : null,
-        );
       },
     );
   }
