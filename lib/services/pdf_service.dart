@@ -1,0 +1,153 @@
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import '../models/word.dart';
+
+class PdfService {
+  /// Generates a PDF document with the list of words and saves it to the local Documents directory.
+  /// Returns the saved File object.
+  Future<File> generateVocabularyPdf(List<Word> words) async {
+    final pdf = pw.Document();
+
+    // Add content to the PDF
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(32),
+        build: (pw.Context context) {
+          return [
+            // Header Section
+            pw.Container(
+              padding: const pw.EdgeInsets.only(bottom: 16),
+              decoration: const pw.BoxDecoration(
+                border: pw.Border(
+                  bottom: pw.BorderSide(color: PdfColors.indigo, width: 2),
+                ),
+              ),
+              child: pw.Row(
+                main: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Column(
+                    cross: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text(
+                        'MY VOCABULARY LIBRARY',
+                        style: pw.TextStyle(
+                          fontSize: 22,
+                          fontWeight: pw.FontWeight.bold,
+                          color: PdfColors.indigo900,
+                        ),
+                      ),
+                      pw.SizedBox(height: 4),
+                      pw.Text(
+                        'Personal English-Turkish Dictionary',
+                        style: pw.TextStyle(
+                          fontSize: 12,
+                          color: PdfColors.grey700,
+                          fontStyle: pw.FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  ),
+                  pw.Column(
+                    cross: pw.CrossAxisAlignment.end,
+                    children: [
+                      pw.Text(
+                        'Total Words: ${words.length}',
+                        style: pw.TextStyle(
+                          fontSize: 12,
+                          fontWeight: pw.FontWeight.bold,
+                        ),
+                      ),
+                      pw.SizedBox(height: 4),
+                      pw.Text(
+                        'Generated on: ${_formatDate(DateTime.now())}',
+                        style: pw.TextStyle(
+                          fontSize: 10,
+                          color: PdfColors.grey600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            pw.SizedBox(height: 24),
+
+            // Words Table
+            if (words.isEmpty)
+              pw.Center(
+                child: pw.Padding(
+                  padding: const pw.EdgeInsets.all(40),
+                  child: pw.Text(
+                    'No words found in your library yet.',
+                    style: pw.TextStyle(
+                      fontSize: 14,
+                      color: PdfColors.grey500,
+                      fontStyle: pw.FontStyle.italic,
+                    ),
+                  ),
+                ),
+              )
+            else
+              pw.TableHelper.fromTextArray(
+                border: const pw.TableBorder(
+                  horizontalInside: pw.BorderSide(color: PdfColors.grey200, width: 0.5),
+                  bottom: pw.BorderSide(color: PdfColors.grey300, width: 1),
+                ),
+                headerStyle: pw.TextStyle(
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.white,
+                ),
+                headerDecoration: const pw.BoxDecoration(
+                  color: PdfColors.indigo800,
+                ),
+                rowDecoration: const pw.BoxDecoration(
+                  color: PdfColors.grey50,
+                ),
+                alternateRowDecoration: const pw.BoxDecoration(
+                  color: PdfColors.white,
+                ),
+                cellPadding: const pw.EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                cellAlignment: pw.Alignment.centerLeft,
+                headers: ['English Word', 'Phonetic Spelling', 'Turkish Translation'],
+                data: words.map((word) {
+                  return [
+                    word.english,
+                    word.phonetic.isNotEmpty ? word.phonetic : '-',
+                    word.turkish,
+                  ];
+                }).toList(),
+              ),
+
+            // Footer Section
+            pw.Padding(
+              padding: const pw.EdgeInsets.only(top: 24),
+              child: pw.Align(
+                alignment: pw.Alignment.center,
+                child: pw.Text(
+                  'Keep learning! Generated by Language Learning App.',
+                  style: pw.TextStyle(
+                    fontSize: 8,
+                    color: PdfColors.grey500,
+                  ),
+                ),
+              ),
+            ),
+          ];
+        },
+      ),
+    );
+
+    // Save the PDF file to the local directory
+    final output = await getApplicationDocumentsDirectory();
+    final file = File('${output.path}/vocabulary_library_${DateTime.now().millisecondsSinceEpoch}.pdf');
+    await file.writeAsBytes(await pdf.save());
+    return file;
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+}
