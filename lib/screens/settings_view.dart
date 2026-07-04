@@ -64,33 +64,26 @@ class SettingsView extends StatelessWidget {
                       ListTile(
                         contentPadding: EdgeInsets.zero,
                         leading: CircleAvatar(
-                          backgroundColor: isDark 
-                              ? Colors.indigo.withOpacity(0.2) 
-                              : Colors.indigo.withOpacity(0.06),
-                          child: Icon(
-                            isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
-                            color: isDark ? Colors.indigo[200] : Colors.indigo[800],
+                          backgroundColor: Colors.indigo.withOpacity(0.2),
+                          child: const Icon(
+                            Icons.dark_mode_rounded,
+                            color: Colors.indigo,
                           ),
                         ),
-                        title: Text(
+                        title: const Text(
                           'Dark Theme Mode',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
-                            color: isDark ? Colors.white : Colors.black87,
+                            color: Colors.white,
                           ),
                         ),
-                        subtitle: Text(
-                          'Reduces eye strain in low-light environments',
+                        subtitle: const Text(
+                          'Forced premium Dark Theme style active',
                           style: TextStyle(
                             fontSize: 12,
-                            color: isDark ? Colors.grey[400] : Colors.grey[600],
+                            color: Colors.grey,
                           ),
-                        ),
-                        trailing: Switch(
-                          value: isDark,
-                          onChanged: (_) => state.toggleTheme(),
-                          activeColor: Colors.indigo[400],
                         ),
                       ),
                     ],

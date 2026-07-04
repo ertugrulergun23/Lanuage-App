@@ -20,7 +20,7 @@ class MyApp extends StatelessWidget {
           return MaterialApp(
             title: 'LingoLib',
             debugShowCheckedModeBanner: false,
-            themeMode: state.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+            themeMode: ThemeMode.dark,
             theme: ThemeData(
               useMaterial3: true,
               colorScheme: ColorScheme.fromSeed(

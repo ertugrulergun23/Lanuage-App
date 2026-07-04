@@ -108,11 +108,10 @@ class PdfService {
                 ),
                 cellPadding: const pw.EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                 cellAlignment: pw.Alignment.centerLeft,
-                headers: ['English Word', 'Phonetic Spelling', 'Turkish Translation'],
+                headers: ['English Word', 'Turkish Translation'],
                 data: words.map((word) {
                   return [
                     word.english,
-                    word.phonetic.isNotEmpty ? word.phonetic : '-',
                     word.turkish,
                   ];
                 }).toList(),

@@ -46,7 +46,7 @@ class AppState extends ChangeNotifier {
   List<Topic> get topics => _topics;
   List<Word> get flashcardWords => _flashcardWords;
   List<String> get errorLogs => _errorLogs;
-  bool get isDarkMode => _isDarkMode;
+  bool get isDarkMode => true;
   bool get isOnline => _isOnline && !_isMockOffline;
   bool get isMockOffline => _isMockOffline;
   bool get isSyncing => _isSyncing;
@@ -276,8 +276,7 @@ class AppState extends ChangeNotifier {
   // --- Theme Toggle Operation ---
 
   void toggleTheme() {
-    _isDarkMode = !_isDarkMode;
-    notifyListeners();
+    // No-op: Light mode is eliminated completely
   }
 
   // --- Flashcard Shuffling ---
