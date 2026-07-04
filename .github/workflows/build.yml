@@ -23,11 +23,19 @@ jobs:
           flutter-version: '3.22.x'
           channel: 'stable'
 
-      - name: Repair Android Project & Rebuild
+      - name: Repair Android Project, Inject Permissions & Rebuild
         run: |
+          # Temiz bir başlangıç için eski android klasörünü siliyoruz
           rm -rf android
-          # --project-name=language_app diyerek o geçersiz isim kuralını bypass ediyoruz
+          
+          # Sıfır kilometre tertemiz android projesini üretiyoruz
           flutter create . --platforms=android --project-name=language_app
+          
+          # İNTERNET İZNİ ENJEKSİYONU: 
+          # Sunucunun az önce ürettiği temiz AndroidManifest.xml dosyasının içine internet iznini kodla gömüyoruz
+          sed -i '/<application/i \    <uses-permission android:name="android.permission.INTERNET" />' android/app/src/main/AndroidManifest.xml
+          
+          # Bağımlılıkları çek ve APK üret
           flutter pub get
           flutter build apk --release
 
