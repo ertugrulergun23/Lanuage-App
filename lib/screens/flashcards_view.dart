@@ -13,6 +13,7 @@ class FlashcardsView extends StatefulWidget {
 
 class _FlashcardsViewState extends State<FlashcardsView> {
   int _currentIndex = 0;
+  String? _lastSignature;
 
   void _nextCard(int totalCards) {
     if (_currentIndex < totalCards - 1) {
@@ -72,6 +73,13 @@ class _FlashcardsViewState extends State<FlashcardsView> {
             ),
           );
         }
+
+        // Reset index to 0 if the flashcards list order/content changes (e.g. on shuffle)
+        final signature = cards.map((w) => '${w.id ?? w.english}').join(',');
+        if (_lastSignature != null && _lastSignature != signature) {
+          _currentIndex = 0;
+        }
+        _lastSignature = signature;
 
         // Bound check index in case words are deleted in library
         if (_currentIndex >= cards.length) {
