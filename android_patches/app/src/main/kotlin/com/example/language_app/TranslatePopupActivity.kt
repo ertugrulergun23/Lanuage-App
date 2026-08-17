@@ -3,6 +3,7 @@ package com.example.language_app
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.WindowManager
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.android.FlutterActivityLaunchConfigs.BackgroundMode
 import io.flutter.embedding.engine.FlutterEngine
@@ -39,14 +40,29 @@ class TranslatePopupActivity : FlutterActivity() {
         const val CHANNEL = "com.example.language_app/process_text"
     }
 
-    // ── Window / Background ──────────────────────────────────────────────────
+    // ── Window sizing (windowIsFloating fix) ────────────────────────────────
 
     /**
-     * Tell Flutter's embedding to render on a transparent surface.
-     * Combined with Theme.TranslatePopup (windowIsTranslucent=true,
-     * windowBackground=transparent), this makes the calling app visible
-     * behind our Flutter widget tree.
+     * windowIsFloating=true causes Android to set the window to WRAP_CONTENT
+     * in both dimensions, which breaks Flutter's rendering surface (it gets
+     * no bounded width constraint → renders at 0×0 or fills screen randomly).
+     *
+     * Fix: force MATCH_PARENT width so Flutter gets a definite horizontal
+     * constraint, while keeping WRAP_CONTENT height so the window shrinks to
+     * fit the Flutter card's intrinsic height.
+     *
+     * Result: the popup behaves like a bottom/centre sheet — full screen width,
+     * only as tall as the card content.
      */
+    override fun onStart() {
+        super.onStart()
+        window?.setLayout(
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.WRAP_CONTENT
+        )
+    }
+
+    // ── Background mode ──────────────────────────────────────────────────────
     override fun getBackgroundMode(): BackgroundMode = BackgroundMode.transparent
 
     // ── Engine selection ─────────────────────────────────────────────────────
