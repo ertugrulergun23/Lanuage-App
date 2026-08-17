@@ -45,39 +45,10 @@ jobs:
           cp android_patches/app/src/main/AndroidManifest.xml \
              android/app/src/main/AndroidManifest.xml
 
-          # 2b. Inject Theme.TranslatePopup into the generated styles.xml
-          #     (cp would OVERWRITE LaunchTheme/NormalTheme — use sed instead)
-          #
-          #     Strategy: write the style block to a temp file, then use sed to
-          #     insert it before the closing </resources> tag so the
-          #     flutter-generated LaunchTheme and NormalTheme are preserved.
-          python3 - <<'PYEOF'
-import re
-
-style_block = """
-    <!-- Theme.TranslatePopup — injected by CI for ACTION_PROCESS_TEXT popup -->
-    <style name="Theme.TranslatePopup" parent="@android:style/Theme.Translucent.NoTitleBar">
-        <item name="android:windowIsFloating">true</item>
-        <item name="android:windowBackground">@android:color/transparent</item>
-        <item name="android:backgroundDimEnabled">true</item>
-        <item name="android:backgroundDimAmount">0.5</item>
-        <item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>
-        <item name="android:windowMinWidthMajor">0%</item>
-        <item name="android:windowMinWidthMinor">0%</item>
-    </style>
-"""
-
-path = "android/app/src/main/res/values/styles.xml"
-content = open(path).read()
-
-# Only inject if not already present (idempotent)
-if "Theme.TranslatePopup" not in content:
-    content = content.replace("</resources>", style_block + "\n</resources>")
-    open(path, "w").write(content)
-    print("Theme.TranslatePopup injected into styles.xml")
-else:
-    print("Theme.TranslatePopup already present, skipping injection")
-PYEOF
+          # 2b. Inject Theme.TranslatePopup into the generated styles.xml.
+          #     Uses a standalone Python script to avoid YAML << heredoc conflicts.
+          #     LaunchTheme and NormalTheme from `flutter create` are preserved.
+          python3 android_patches/inject_theme.py
 
           # 2c. Copy Kotlin source files (MainActivity + TranslatePopupActivity)
           mkdir -p android/app/src/main/kotlin/com/example/language_app
