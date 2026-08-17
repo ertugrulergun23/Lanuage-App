@@ -23,19 +23,41 @@ jobs:
           flutter-version: '3.22.x'
           channel: 'stable'
 
-      - name: Repair Android Project, Inject Permissions & Rebuild
+      - name: Repair Android Project, Apply Native Patches & Build
         run: |
-          # Temiz bir başlangıç için eski android klasörünü siliyoruz
+          # ── Step 1: Wipe & regenerate the Android project skeleton ────────────
           rm -rf android
-          
-          # Sıfır kilometre tertemiz android projesini üretiyoruz
           flutter create . --platforms=android --project-name=language_app
-          
-          # İNTERNET İZNİ ENJEKSİYONU: 
-          # Sunucunun az önce ürettiği temiz AndroidManifest.xml dosyasının içine internet iznini kodla gömüyoruz
-          sed -i '/<application/i \    <uses-permission android:name="android.permission.INTERNET" />' android/app/src/main/AndroidManifest.xml
-          
-          # Bağımlılıkları çek ve APK üret
+
+          # ── Step 2: Apply native patches from android_patches/ ────────────────
+          #
+          # android_patches/ is committed to the repository and contains all
+          # hand-crafted native files that flutter create would not generate:
+          #   • AndroidManifest.xml  — includes INTERNET permission + popup Activity
+          #   • styles.xml           — translucent theme for TranslatePopupActivity
+          #   • MainActivity.kt      — adds FlutterEngine pre-warm logic
+          #   • TranslatePopupActivity.kt — handles ACTION_PROCESS_TEXT
+          #
+          # NOTE: No sed injection is needed because the INTERNET permission is
+          # already present in android_patches/app/src/main/AndroidManifest.xml.
+
+          # 2a. Replace the generated manifest with our patched version
+          cp android_patches/app/src/main/AndroidManifest.xml \
+             android/app/src/main/AndroidManifest.xml
+
+          # 2b. Copy the custom theme (styles.xml)
+          mkdir -p android/app/src/main/res/values
+          cp android_patches/app/src/main/res/values/styles.xml \
+             android/app/src/main/res/values/styles.xml
+
+          # 2c. Copy Kotlin source files (MainActivity + TranslatePopupActivity)
+          mkdir -p android/app/src/main/kotlin/com/example/language_app
+          cp android_patches/app/src/main/kotlin/com/example/language_app/MainActivity.kt \
+             android/app/src/main/kotlin/com/example/language_app/MainActivity.kt
+          cp android_patches/app/src/main/kotlin/com/example/language_app/TranslatePopupActivity.kt \
+             android/app/src/main/kotlin/com/example/language_app/TranslatePopupActivity.kt
+
+          # ── Step 3: Fetch deps & build ────────────────────────────────────────
           flutter pub get
           flutter build apk --release
 

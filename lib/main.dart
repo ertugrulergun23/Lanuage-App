@@ -1,11 +1,28 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/app_state.dart';
 import 'screens/home_screen.dart';
+import 'screens/translate_popup_view.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MyApp());
+
+  // Read the initial route set by the native Activity.
+  // • TranslatePopupActivity sets it to '/popup' via FlutterEngine.navigationChannel.
+  // • Normal app launch leaves it as '/' (the default).
+  // This allows a single Dart entrypoint (main()) to serve both scenarios
+  // without any changes to MyApp or its HomeScreen.
+  final String route = PlatformDispatcher.instance.defaultRouteName;
+
+  if (route == '/popup') {
+    // Lightweight path — only PopupApp is initialised, no Provider/AppState overhead.
+    runApp(const PopupApp());
+  } else {
+    // Normal path — full app, unchanged.
+    runApp(const MyApp());
+  }
 }
 
 class MyApp extends StatelessWidget {

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    styles.xml — Theme definitions for the LingoLib app.
+
+    LaunchTheme and NormalTheme are the standard Flutter-generated themes.
+    Theme.TranslatePopup is our custom translucent theme for the popup activity.
+-->
+<resources>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         Standard Flutter splash/launch theme.
+         Background is shown during engine initialisation before Flutter draws.
+         ══════════════════════════════════════════════════════════════════════ -->
+    <style name="LaunchTheme" parent="@android:style/Theme.Black.NoTitleBar">
+        <item name="android:windowBackground">@android:color/white</item>
+    </style>
+
+    <!-- Normal theme applied once Flutter has initialised.
+         The Flutter surface sits on top, so the background barely matters. -->
+    <style name="NormalTheme" parent="@android:style/Theme.Black.NoTitleBar">
+        <item name="android:windowBackground">@android:color/black</item>
+    </style>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         Theme.TranslatePopup
+         ──────────────────────────────────────────────────────────────────────
+         Used by TranslatePopupActivity.  The Activity is FULL-SCREEN but
+         TRANSPARENT, which lets the app behind it (Chrome, e-reader, etc.)
+         show through.  The "floating card" effect is rendered entirely by the
+         Flutter widget tree — not by Android's dialog chrome.
+
+         Why NOT windowIsFloating=true?
+           • windowIsFloating forces WRAP_CONTENT on the window, which breaks
+             Flutter's rendering surface (0×0 view or unpredictable size).
+           • The transparent full-screen approach is the production-proven
+             pattern for Flutter overlays (used by translate/dictionary apps).
+
+         Key attributes:
+           windowIsTranslucent  → keeps the previous Activity visible in the
+                                  window stack (required for see-through effect)
+           windowBackground     → fully transparent canvas for Flutter to paint on
+           backgroundDimEnabled → dims the underlying app for focus (true)
+           windowNoTitle        → hides the system title bar
+           windowAnimationStyle → slide-up / fade animation on open/close
+         ══════════════════════════════════════════════════════════════════════ -->
+    <style name="Theme.TranslatePopup" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:backgroundDimAmount">0.5</item>
+        <item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>
+        <!-- Disable the default ActionBar entirely -->
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+</resources>
